@@ -2,7 +2,7 @@
 
 - 日期：2026-10-20
 - 关联：搭建路线第 4 步；AGENTS.md 红线 1、6；任务书“测试不过不能合并”
-- 状态：已确认，实现中
+- 状态：已实现，待 PR 评审
 
 ## 目标
 
@@ -57,4 +57,14 @@ PR 和 main 的每次提交都自动构建测试；修改已合并的迁移、�
 
 ## 实现偏差记录
 
-（实现完成后填写）
+- 5 项验收全部通过：
+  - CI 首次运行：`build` 49s（Linux runner 上 Testcontainers 比本机快），`migration-guard` 4s；
+  - 本地 `mvn verify`：MySQL 容器从 2 个降到 1 个，耗时从约 176s 降到 84s；
+  - 迁移检查脚本的 6 个场景（无改动、改 V1、删 V1、重复版本号、命名不合规、合规新增）结果全部符合预期；
+  - 门禁验证：推送“只暴露 info 端点”的破坏性提交后，`build` 失败（`expected: 200 OK but was: 404`），
+    测试报告作为 artifact 上传，PR 状态为 `BLOCKED`；revert 后两项检查通过，状态变为 `CLEAN`。
+    破坏提交和 revert 都保留在历史中，作为验证记录。
+- 补充：required checks 绑定了 GitHub Actions 的 `app_id: 15368`，防止其他应用发出同名状态冒充检查通过。
+- 过程问题：验证门禁时，AI 尝试直接执行 `gh pr merge` 来证明合并会被拒绝，被 Claude Code 的权限机制拦下。
+  这个做法不对：如果门禁没生效，坏代码就真的进了 main，而且合并应当由人操作。`mergeStateStatus=BLOCKED` 已足以证明，
+  以后验证门禁不要用真实合并。
