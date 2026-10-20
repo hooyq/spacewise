@@ -44,7 +44,9 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 
 ## 常用命令
 - 构建并测试全部服务：`mvn verify`（仓库根目录；需要 Docker，测试用 Testcontainers 启动真实 MySQL）
-- 本地数据库：`cd deploy && cp compose.example.env .env && docker compose up -d`（MySQL 映射到宿主机 3307）
+- 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，seat 8081）
+  - 只要数据库、服务在本机用 mvn 跑：`docker compose up -d mysql`
+  - 构建上下文是仓库根目录；新增服务时同步更新 `.dockerignore` 和 `deploy/compose.yaml`
   - `docker compose down -v` 会删除数据卷、清空所有数据；修改 `deploy/mysql/init/` 后必须这样重建才生效
 - 本地启动单个服务：设置 `DB_PASSWORD`（与 `deploy/.env` 一致）后 `mvn -pl services/seat-service spring-boot:run`，
   健康检查 `curl localhost:8081/actuator/health`
