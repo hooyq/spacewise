@@ -13,7 +13,8 @@
 | M3 | 物业报修工单 | `services/repair-service` | 8083 | `repair_db` / `repair` |
 | D  | 公共层：RBAC、空间主数据、通知、审计 | `services/platform-service` | 8084 | `platform_db` / `platform` |
 
-网关预留 8080。每个服务只能连自己的库，账号权限由数据库强制。
+网关 `services/gateway`（8080）是浏览器的唯一入口：`/api/<模块>/**` 原样转发给对应服务，其余路径（含 `/internal/**`）一律 404。
+每个服务只能连自己的库，账号权限由数据库强制。
 
 跨模块写回：M3 维修中 → M1 下架该室座位；M2 审批通过 → M1 占用该室时段座位。
 M1 的座位状态必须记录写入来源（M1 / M2 / M3）。
@@ -35,7 +36,7 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - api 只调用 service；**不返回实体类**，一律转换成 dto。
 - 要用其他服务的数据，只能通过 `client`（`@HttpExchange` 接口）调用对方的 api，调用方自己声明用到的接口，不引用对方代码。
   客户端用 `config/HttpClients` 创建，地址和超时配置在 `spacewise.services.<名称>`；框架不自动重试。示例：repair-service 的 `SeatClient`。
-- 路径：对外 `/api/<模块>/...`，服务间内部 `/internal/...`。
+- 路径：对外 `/api/<模块>/...`（**不带这个前缀，网关转发不到**），服务间内部 `/internal/...`。
 - 下游服务不可用不能让本服务的 `/actuator/health` 变 DOWN（避免故障沿调用链扩散）。
 
 ## 工作流程
