@@ -8,6 +8,7 @@ ARG SERVICE
 RUN test -n "$SERVICE" || (echo "缺少构建参数 SERVICE" && exit 1)
 WORKDIR /src
 COPY pom.xml .
+COPY libs libs
 COPY services services
 # 缓存挂载：依赖下载到构建机的缓存里，下次构建复用，不进入镜像。
 # 测试需要 Docker（Testcontainers），在 CI 中运行，这里跳过。
