@@ -25,6 +25,9 @@ services:
     image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 deploy/.env 中设置 MYSQL_ROOT_PASSWORD}
+      # 让容器内的 mysql 命令行客户端使用 utf8mb4。未设置时客户端按 latin1 处理输入，
+      # docker exec 手动执行含中文的 SQL 会把中文存成乱码（应用走 JDBC，不受影响）
+      LANG: C.UTF-8
       # 以下变量只给 init 脚本使用，见 mysql/init/01-databases.sh
       SEAT_DB_PASSWORD: ${SEAT_DB_PASSWORD:?}
       ROOM_DB_PASSWORD: ${ROOM_DB_PASSWORD:?}
@@ -100,6 +103,8 @@ services:
       DB_USERNAME: repair
       DB_PASSWORD: ${REPAIR_DB_PASSWORD:?}
       SERVER_PORT: 8083
+      # 服务间调用：容器网络内用服务名和容器端口
+      SEAT_SERVICE_URL: http://seat-service:8081
     ports:
       - "8083:8083"
 

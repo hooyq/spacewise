@@ -18,3 +18,11 @@ management:
       exposure:
         # 只对外暴露健康检查，其余 Actuator 端点（env、beans 等）可能泄露配置
         include: health
+
+# 下游服务（服务间调用，见 config.ServiceClientConfig）。Compose 中用服务名访问，如 http://seat-service:8081
+spacewise:
+  services:
+    seat:
+      base-url: ${SEAT_SERVICE_URL:http://localhost:8081}
+      connect-timeout: 2s
+      read-timeout: 5s

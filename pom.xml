@@ -20,7 +20,20 @@
 
     <properties>
         <java.version>21</java.version>
+        <mybatis-plus.version>3.5.17</mybatis-plus.version>
     </properties>
+
+    <!-- Spring Boot 父 POM 未管理的依赖，在这里统一版本；子模块引用时不写版本 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- dao 层（ADR-0004） -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <!-- 每个服务是一个子模块；在根目录执行 mvn verify 会构建并测试全部模块 -->
     <modules>
