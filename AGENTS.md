@@ -69,13 +69,14 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 发布：在 `main` 上打 tag `vX.Y.Z` → 人工审批 → 部署生产。
 
 ## 常用命令
-- 本地**只测改动的模块**：`mvn verify -pl services/<服务>`（需要 Docker，测试用 Testcontainers 启动真实 MySQL）。
+- 本地**只测改动的模块**：`mvn verify -pl services/<服务> -am`（`-am` 一起构建依赖的 `libs/web-common`，不加会找不到它）（需要 Docker，测试用 Testcontainers 启动真实 MySQL）。
   全量 `mvn verify` 本机要 4～5 分钟，交给 CI 跑，不要每次改动都本地跑全量
 - 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，服务端口见上表）
   - 只要数据库、服务在本机用 mvn 跑：`docker compose up -d mysql`
   - 所有服务共用 `deploy/service.Dockerfile`，构建参数 `SERVICE` 指定服务目录名
   - `docker compose down -v` 会删除数据卷、清空所有数据；修改 `deploy/mysql/init/` 后必须这样重建才生效
-- 本地启动单个服务：设置 `DB_PASSWORD`（与 `deploy/.env` 一致）后 `mvn -pl services/seat-service spring-boot:run`，
+- 本地启动单个服务：先 `mvn install -pl libs/web-common -am -DskipTests`（web-common 改动后要重新执行），
+  再设置 `DB_PASSWORD`（与 `deploy/.env` 一致）后 `mvn -pl services/seat-service spring-boot:run`，
   健康检查 `curl localhost:8081/actuator/health`
 - 迁移脚本放 `services/<服务>/src/main/resources/db/migration/V<整数>__<小写下划线描述>.sql`；每个服务只连自己的库（`seat_db` 等）
   - 本地自检：`bash scripts/ci/check-migrations.sh`（CI 的 migration-guard 跑的就是它）
