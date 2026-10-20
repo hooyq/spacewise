@@ -50,4 +50,32 @@ class RoomApiTest {
                 Map.of("code", CODE_PREFIX + "A", "building", "光华楼"),
                 Map.of("code", CODE_PREFIX + "B", "building", "第三教学楼"));
     }
+
+    @Test
+    void getsSingleRoomByCode() {
+        jdbc.update("INSERT INTO room (code, building) VALUES (?, ?)", CODE_PREFIX + "C", "光华楼");
+
+        ResponseEntity<Map> response = http.getForEntity("/api/seat/rooms/" + CODE_PREFIX + "C", Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(Map.of("code", CODE_PREFIX + "C", "building", "光华楼"));
+    }
+
+    @Test
+    void missingRoomIsNotFoundWithBusinessCode() {
+        ResponseEntity<Map> response = http.getForEntity("/api/seat/rooms/" + CODE_PREFIX + "NONE", Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody())
+                .containsEntry("code", "SEAT.ROOM_NOT_FOUND")
+                .containsEntry("detail", "教室 " + CODE_PREFIX + "NONE 不存在");
+    }
+
+    @Test
+    void invalidRoomCodeFailsValidation() {
+        ResponseEntity<Map> response = http.getForEntity("/api/seat/rooms/bad_code!", Map.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).containsEntry("code", "COMMON.VALIDATION_FAILED");
+    }
 }
