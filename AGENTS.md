@@ -50,6 +50,12 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
   - `docker compose down -v` 会删除数据卷、清空所有数据；修改 `deploy/mysql/init/` 后必须这样重建才生效
 - 本地启动单个服务：设置 `DB_PASSWORD`（与 `deploy/.env` 一致）后 `mvn -pl services/seat-service spring-boot:run`，
   健康检查 `curl localhost:8081/actuator/health`
-- 迁移脚本放 `services/<服务>/src/main/resources/db/migration/V<n>__<描述>.sql`；每个服务只连自己的库（`seat_db` 等）
+- 迁移脚本放 `services/<服务>/src/main/resources/db/migration/V<整数>__<小写下划线描述>.sql`；每个服务只连自己的库（`seat_db` 等）
+  - 本地自检：`bash scripts/ci/check-migrations.sh`（CI 的 migration-guard 跑的就是它）
+- 集成测试类统一加 `@IntegrationTest`，不要自己组合 `@SpringBootTest` 等注解，否则会多启动一个 MySQL 容器
+
+## CI
+- PR 必须通过 `build`（`mvn -B verify`）和 `migration-guard`，且分支与 main 同步，才能合并。
+- 新增 GitHub Action：官方 action（`actions/*`）用主版本标签；**第三方 action 必须锁定 commit SHA**。
 - 端口约定：gateway 8080、seat 8081、room 8082、repair 8083、platform 8084
 - 版本号只在根 `pom.xml` 维护；子模块依赖不写版本（由 Spring Boot 父 POM 管理）
