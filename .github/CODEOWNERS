@@ -1,0 +1,17 @@
+# 改动这些路径的 PR 会自动请求对应负责人评审。
+# 分组确定后把 @hooyq 换成各模块组成员（或 GitHub team，如 @org/m1-seat）。
+
+*                               @hooyq
+
+# 模块
+/services/seat-service/         @hooyq
+/services/room-service/         @hooyq
+/services/repair-service/       @hooyq
+/services/platform-service/     @hooyq
+
+# 公共层、schema、流水线、项目规则：任务书要求“须经组内评审”
+**/db/migration/               @hooyq
+/.github/                       @hooyq
+/deploy/                        @hooyq
+/AGENTS.md                      @hooyq
+/docs/adr/                      @hooyq

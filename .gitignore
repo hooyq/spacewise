@@ -1,0 +1,25 @@
+# 密钥与本地配置
+.env
+*.env
+!*.example.env
+*.pem
+*.key
+
+# Java / Maven
+target/
+*.class
+*.log
+
+# Node
+node_modules/
+dist/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# AI 工具的本地状态（规则文件 AGENTS.md / CLAUDE.md 需要提交）
+.claude/settings.local.json
