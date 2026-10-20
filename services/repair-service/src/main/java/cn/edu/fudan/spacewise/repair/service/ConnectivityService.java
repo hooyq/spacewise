@@ -25,6 +25,7 @@ public class ConnectivityService {
     public Map<String, String> check() {
         Map<String, String> result = new LinkedHashMap<>();
         result.put("seat-service", pingSeat());
+        log.info("下游连通性: {}", result);
         return result;
     }
 
