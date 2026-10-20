@@ -5,18 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 /**
- * 启动完整应用（随机端口），像外部调用方一样通过 HTTP 访问健康检查。
- * Docker healthcheck 和 Compose depends_on 后续都依赖这个端点。
+ * 像外部调用方一样通过 HTTP 访问健康检查。
+ * Docker healthcheck 和 Compose depends_on 都依赖这个端点。
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration.class)
+@IntegrationTest
 class HealthEndpointTest {
 
     @Autowired
