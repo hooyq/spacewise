@@ -7,6 +7,14 @@ name: spacewise
 # 四个后端服务的公共配置（x- 开头的键 Compose 不当作服务，只用来被 <<: *backend 引用）
 # 注意 <<: 是浅合并：服务里写了同名的键（如 build、environment）会整个覆盖，不会逐项合并，
 # 所以 build 和 environment 写在每个服务里。
+# 日志轮转：Docker 默认把容器输出无限追加到日志文件，服务器跑久了会撑满磁盘。
+# 每个容器最多保留 3 个 10MB 的文件，查看用 docker compose logs <服务>
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 x-healthcheck: &healthcheck
   # $$ 表示由容器内的 shell 展开变量，而不是由 Compose 展开
   test: ["CMD-SHELL", "curl -fsS http://localhost:$$SERVER_PORT/actuator/health"]
@@ -21,6 +29,7 @@ x-backend: &backend
     mysql:
       condition: service_healthy
   healthcheck: *healthcheck
+  logging: *logging
 
 services:
   mysql:
@@ -43,6 +52,7 @@ services:
       - mysql-data:/var/lib/mysql
       # 卷为空（首次启动）时，MySQL 会执行这个目录下的脚本；卷里已有数据时不再执行
       - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    logging: *logging
     healthcheck:
       # 用 -h 127.0.0.1 走 TCP：初始化阶段的临时实例不监听网络，不会被误判为就绪
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
@@ -145,6 +155,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck: *healthcheck
+    logging: *logging
 
 volumes:
   mysql-data:
