@@ -25,6 +25,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- 统一错误响应与全局异常处理、参数校验（ADR-0006） -->
+        <dependency>
+            <groupId>cn.edu.fudan.spacewise</groupId>
+            <artifactId>web-common</artifactId>
+        </dependency>
         <!-- 生成并在服务间传递 traceId，写进每行日志；不上报追踪服务器（第 8 步计划） -->
         <dependency>
             <groupId>io.micrometer</groupId>

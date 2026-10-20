@@ -73,26 +73,30 @@ class DownstreamFailureTest {
     @LocalServerPort
     private int port;
 
-    private int getStatus(String path) throws Exception {
+    private HttpResponse<String> get(String path) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .timeout(Duration.ofSeconds(30))
                 .build();
-        return client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     @Test
     void slowDownstreamTimesOutWith504() throws Exception {
         long start = System.nanoTime();
-        int status = getStatus("/api/seat/rooms");
+        HttpResponse<String> response = get("/api/seat/rooms");
         Duration elapsed = Duration.ofNanos(System.nanoTime() - start);
 
-        assertThat(status).isEqualTo(504);
+        assertThat(response.statusCode()).isEqualTo(504);
+        assertThat(response.body()).contains("\"code\":\"GATEWAY.DOWNSTREAM_TIMEOUT\"");
         assertThat(elapsed).isLessThan(READ_TIMEOUT.multipliedBy(4));
     }
 
     @Test
     void unreachableDownstreamIs502() throws Exception {
-        assertThat(getStatus("/api/room/anything")).isEqualTo(502);
+        HttpResponse<String> response = get("/api/room/anything");
+
+        assertThat(response.statusCode()).isEqualTo(502);
+        assertThat(response.body()).contains("\"code\":\"GATEWAY.DOWNSTREAM_UNAVAILABLE\"");
     }
 }
