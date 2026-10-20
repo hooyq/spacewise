@@ -78,7 +78,7 @@
 ## 实现偏差记录
 
 - 验收结果：
-  - 本地测试了 web-common（8 个）、seat（9 个）、gateway（7 个），全部通过；room、repair、platform 只增加了依赖，以 CI 为准。
+  - 本地测试了 web-common（8 个）、seat（8 个）、gateway（7 个），全部通过；room、repair、platform 只增加了依赖，以 CI 为准。
   - 故意破坏一次：让 500 返回异常信息，`unexpectedExceptionHidesInternalDetails` 失败（响应中出现了 `secret_table`）。
   - Compose 下，经网关访问：
     - `/api/seat/rooms/H9999` → 404 `SEAT.ROOM_NOT_FOUND`
