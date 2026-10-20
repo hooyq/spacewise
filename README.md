@@ -20,7 +20,7 @@
 
 | 组件 | 选型 | 决策记录 |
 |---|---|---|
-| 仓库与分支 | 单仓库，主干开发，tag 发布 | [ADR-0001](docs/adr/0001-monorepo-and-trunk-based.md) |
+| 仓库与分支 | 单仓库，`dev` + `main` 双分支，tag 发布 | [ADR-0001](docs/adr/0001-monorepo-and-trunk-based.md) |
 | 后端 | Java 21 · Spring Boot 3.5 · Maven 多模块 | [ADR-0002](docs/adr/0002-spring-boot-3-5.md) |
 | 数据库 | MySQL 8.4 · Flyway 迁移 · 测试用 Testcontainers | [ADR-0003](docs/adr/0003-mysql-per-service-database.md) |
 | 数据访问 | MyBatis-Plus | [ADR-0004](docs/adr/0004-mybatis-plus.md) |
@@ -101,7 +101,7 @@ cn.edu.fudan.spacewise.<服务>
 
 1. **需求**：写进 `docs/requirements/`，编号如 `REQ-M1-003`，必须有验收标准。
 2. **计划**：非琐碎的任务先写 `docs/plans/YYYY-MM-DD-简述.md`，组内确认后再写代码。重要的取舍写成 ADR，并列出候选方案。
-3. **分支**：从 `main` 拉出 `feat/<简述>` 或 `fix/<简述>`。
+3. **分支**：从 `dev` 拉出 `feat/<简述>` 或 `fix/<简述>`，PR 提到 `dev`。发布时由负责人把 `dev` 通过 PR 合并到 `main`，再在 `main` 上打 tag。
 4. **实现**：照着已有的示例写。
    | 要做的事 | 照着这个写 |
    |---|---|
@@ -118,11 +118,11 @@ cn.edu.fudan.spacewise.<服务>
 
 ## CI 与分支保护
 
-每个指向 `main` 的 PR 都必须通过以下检查才能合并：
+每个指向 `dev` 或 `main` 的 PR 都必须通过以下检查才能合并：
 
 - `build`：`mvn -B verify`，跑全部模块的测试，约 2 分钟。
 - `migration-guard`：已合并的迁移文件不能修改、删除或重命名；同一服务内版本号不能重复；文件名必须符合规范。
-- 分支必须和 `main` 同步；PR 中的讨论必须全部解决。管理员同样受这些规则约束。
+- 分支必须和目标分支同步；PR 中的讨论必须全部解决。管理员同样受这些规则约束。
 
 ## 排查问题
 

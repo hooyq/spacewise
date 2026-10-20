@@ -61,7 +61,8 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 一次改动只做一件事，保持 diff 可审查；不顺手重构无关代码。
 
 ## Git 约定
-- 主干开发：`feat/<简述>`、`fix/<简述>` → PR → `main`。`main` 受保护，不能直接 push。
+- 分支（ADR-0001）：从 `dev` 拉出 `feat/<简述>`、`fix/<简述>` → PR → `dev`；发布时 `dev` → PR → `main`。
+  **PR 目标默认是 `dev`**；`main` 只接受来自 `dev` 的 PR。两个分支都受保护，不能直接 push。
 - 提交信息用 Conventional Commits：`feat(seat): ...`、`fix(repair): ...`、`docs: ...`、`ci: ...`。
   scope 用模块名：`seat` `room` `repair` `platform` `frontend` `deploy`。
 - 提交说明写清做了什么、为什么，关联需求编号（如 `Refs: REQ-M1-003`）。
@@ -84,5 +85,5 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 版本号只在根 `pom.xml` 维护；子模块依赖不写版本（由 Spring Boot 父 POM 管理）
 
 ## CI
-- PR 必须通过 `build`（`mvn -B verify`）和 `migration-guard`，且分支与 main 同步，才能合并。
+- PR（目标 `dev` 或 `main`）必须通过 `build`（`mvn -B verify`）和 `migration-guard`，且与目标分支同步，才能合并。
 - 新增 GitHub Action：官方 action（`actions/*`）用主版本标签；**第三方 action 必须锁定 commit SHA**。
