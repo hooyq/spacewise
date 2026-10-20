@@ -21,11 +21,21 @@
     <properties>
         <java.version>21</java.version>
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
+        <!-- 必须与 Spring Boot 版本配套：2025.0.x 对应 Boot 3.5（ADR-0005） -->
+        <spring-cloud.version>2025.0.3</spring-cloud.version>
     </properties>
 
     <!-- Spring Boot 父 POM 未管理的依赖，在这里统一版本；子模块引用时不写版本 -->
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Cloud 各组件的版本清单（目前只有网关用到） -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- dao 层（ADR-0004） -->
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -41,5 +51,6 @@
         <module>services/room-service</module>
         <module>services/repair-service</module>
         <module>services/platform-service</module>
+        <module>services/gateway</module>
     </modules>
 </project>

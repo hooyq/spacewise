@@ -7,18 +7,20 @@ name: spacewise
 # 四个后端服务的公共配置（x- 开头的键 Compose 不当作服务，只用来被 <<: *backend 引用）
 # 注意 <<: 是浅合并：服务里写了同名的键（如 build、environment）会整个覆盖，不会逐项合并，
 # 所以 build 和 environment 写在每个服务里。
+x-healthcheck: &healthcheck
+  # $$ 表示由容器内的 shell 展开变量，而不是由 Compose 展开
+  test: ["CMD-SHELL", "curl -fsS http://localhost:$$SERVER_PORT/actuator/health"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 40s
+
 x-backend: &backend
   depends_on:
     # 等 mysql 的 healthcheck 通过后才启动，避免启动时连不上数据库
     mysql:
       condition: service_healthy
-  healthcheck:
-    # $$ 表示由容器内的 shell 展开变量，而不是由 Compose 展开
-    test: ["CMD-SHELL", "curl -fsS http://localhost:$$SERVER_PORT/actuator/health"]
-    interval: 10s
-    timeout: 3s
-    retries: 5
-    start_period: 40s
+  healthcheck: *healthcheck
 
 services:
   mysql:
@@ -126,6 +128,23 @@ services:
       SERVER_PORT: 8084
     ports:
       - "8084:8084"
+
+  gateway:  # 浏览器访问后端的唯一入口（ADR-0005）；不连数据库，也不等待下游服务
+    build:
+      context: ..
+      dockerfile: deploy/service.Dockerfile
+      args:
+        SERVICE: gateway
+    image: spacewise/gateway:local
+    environment:
+      SERVER_PORT: 8080
+      SEAT_SERVICE_URL: http://seat-service:8081
+      ROOM_SERVICE_URL: http://room-service:8082
+      REPAIR_SERVICE_URL: http://repair-service:8083
+      PLATFORM_SERVICE_URL: http://platform-service:8084
+    ports:
+      - "8080:8080"
+    healthcheck: *healthcheck
 
 volumes:
   mysql-data:

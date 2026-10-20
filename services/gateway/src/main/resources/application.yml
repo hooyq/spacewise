@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: gateway
+  http:
+    client:
+      # 网关转发请求的超时。不设置时下游宕机会让请求挂起很久（实测约 80 秒），占满网关线程。
+      # 超时由 DownstreamErrorHandler 转成 504，连不上转成 502
+      connect-timeout: 2s
+      read-timeout: 10s
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          # 按前缀转发，路径原样传给服务（服务自己的路径就带 /api/<模块> 前缀）。
+          # 没有匹配的路径一律 404，所以 /internal/** 和各服务的 /actuator/** 从网关访问不到。
+          # Compose 中用环境变量把地址改成容器服务名，如 http://seat-service:8081
+          routes:
+            - id: seat
+              uri: ${SEAT_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/seat/**
+            - id: room
+              uri: ${ROOM_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/room/**
+            - id: repair
+              uri: ${REPAIR_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/repair/**
+            - id: platform
+              uri: ${PLATFORM_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/platform/**
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

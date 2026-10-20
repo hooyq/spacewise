@@ -13,7 +13,8 @@
 | M3 | 物业报修工单 | `services/repair-service` | 8083 | `repair_db` / `repair` |
 | D  | 公共层：RBAC、空间主数据、通知、审计 | `services/platform-service` | 8084 | `platform_db` / `platform` |
 
-网关预留 8080。每个服务只能连自己的库，账号权限由数据库强制。
+网关 `services/gateway`（8080）是浏览器的唯一入口：`/api/<模块>/**` 原样转发给对应服务，其余路径（含 `/internal/**`）一律 404。
+每个服务只能连自己的库，账号权限由数据库强制。
 
 跨模块写回：M3 维修中 → M1 下架该室座位；M2 审批通过 → M1 占用该室时段座位。
 M1 的座位状态必须记录写入来源（M1 / M2 / M3）。
@@ -35,7 +36,7 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - api 只调用 service；**不返回实体类**，一律转换成 dto。
 - 要用其他服务的数据，只能通过 `client`（`@HttpExchange` 接口）调用对方的 api，调用方自己声明用到的接口，不引用对方代码。
   客户端用 `config/HttpClients` 创建，地址和超时配置在 `spacewise.services.<名称>`；框架不自动重试。示例：repair-service 的 `SeatClient`。
-- 路径：对外 `/api/<模块>/...`，服务间内部 `/internal/...`。
+- 路径：对外 `/api/<模块>/...`（**不带这个前缀，网关转发不到**），服务间内部 `/internal/...`。
 - 下游服务不可用不能让本服务的 `/actuator/health` 变 DOWN（避免故障沿调用链扩散）。
 
 ## 工作流程
@@ -53,7 +54,8 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 发布：在 `main` 上打 tag `vX.Y.Z` → 人工审批 → 部署生产。
 
 ## 常用命令
-- 构建并测试全部服务：`mvn verify`（仓库根目录；需要 Docker，测试用 Testcontainers 启动真实 MySQL）
+- 本地**只测改动的模块**：`mvn verify -pl services/<服务>`（需要 Docker，测试用 Testcontainers 启动真实 MySQL）。
+  全量 `mvn verify` 本机要 4～5 分钟，交给 CI 跑，不要每次改动都本地跑全量
 - 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，服务端口见上表）
   - 只要数据库、服务在本机用 mvn 跑：`docker compose up -d mysql`
   - 所有服务共用 `deploy/service.Dockerfile`，构建参数 `SERVICE` 指定服务目录名
