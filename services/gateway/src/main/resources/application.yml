@@ -1,6 +1,12 @@
 spring:
   application:
     name: gateway
+  http:
+    client:
+      # 网关转发请求的超时。不设置时下游宕机会让请求挂起很久（实测约 80 秒），占满网关线程。
+      # 超时由 DownstreamErrorHandler 转成 504，连不上转成 502
+      connect-timeout: 2s
+      read-timeout: 10s
   cloud:
     gateway:
       server:
