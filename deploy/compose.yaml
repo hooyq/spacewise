@@ -100,6 +100,8 @@ services:
       DB_USERNAME: repair
       DB_PASSWORD: ${REPAIR_DB_PASSWORD:?}
       SERVER_PORT: 8083
+      # 服务间调用：容器网络内用服务名和容器端口
+      SEAT_SERVICE_URL: http://seat-service:8081
     ports:
       - "8083:8083"
 
