@@ -34,7 +34,7 @@ for dir in services/*/src/main/resources/db/migration; do
   echo "== b) 版本号唯一：$dir"
   duplicates=$(find "$dir" -maxdepth 1 -name 'V*__*.sql' -printf '%f\n' | sed -E 's/^V([0-9]+)__.*/\1/' | sort | uniq -d)
   if [ -n "$duplicates" ]; then
-    echo "违规：版本号重复：$duplicates（先同步 main，再把自己的迁移改成更大的版本号）"
+    echo "违规：版本号重复：$duplicates（先同步目标分支，再把自己的迁移改成更大的版本号）"
     failed=1
   fi
 done
