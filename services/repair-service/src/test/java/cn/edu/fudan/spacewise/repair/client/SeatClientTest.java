@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
 
 /**
  * 用 JDK 自带的 HttpServer 扮演 seat-service，发出真实的 HTTP 请求，验证路径、响应解析、错误和超时处理。
@@ -64,7 +65,7 @@ class SeatClientTest {
 
     private SeatClient client() {
         String baseUrl = "http://127.0.0.1:" + fakeSeat.getAddress().getPort();
-        return HttpClients.create(SeatClient.class,
+        return HttpClients.create(RestClient.builder(), SeatClient.class,
                 new ServiceEndpoints.Endpoint(baseUrl, Duration.ofSeconds(2), READ_TIMEOUT));
     }
 
