@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: repair-service
+  datasource:
+    # 默认值对应 deploy/compose.yaml 的本地 MySQL（宿主机端口 3307）
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/repair_db
+    username: ${DB_USERNAME:repair}
+    # 不设默认值：密码只从环境变量读取，不写进仓库
+    password: ${DB_PASSWORD}
+
+server:
+  # 端口约定：gateway 8080、seat 8081、room 8082、repair 8083、platform 8084
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # 只对外暴露健康检查，其余 Actuator 端点（env、beans 等）可能泄露配置
+        include: health

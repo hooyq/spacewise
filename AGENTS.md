@@ -6,12 +6,14 @@
 ## 项目是什么
 复旦软件过程管理课程 PJ。以自习座位预约为核心，延伸到整教室预约审批和物业报修。
 
-| 模块 | 名称 | 服务目录（规划中） |
-|---|---|---|
-| M1 | 自习座位预约 | `services/seat-service` |
-| M2 | 整教室预约与审批 | `services/room-service` |
-| M3 | 物业报修工单 | `services/repair-service` |
-| D  | 公共层：RBAC、空间主数据、通知、审计 | `services/platform-service` |
+| 模块 | 名称 | 服务目录 | 端口 | 数据库 / 账号 |
+|---|---|---|---|---|
+| M1 | 自习座位预约 | `services/seat-service` | 8081 | `seat_db` / `seat` |
+| M2 | 整教室预约与审批 | `services/room-service` | 8082 | `room_db` / `room` |
+| M3 | 物业报修工单 | `services/repair-service` | 8083 | `repair_db` / `repair` |
+| D  | 公共层：RBAC、空间主数据、通知、审计 | `services/platform-service` | 8084 | `platform_db` / `platform` |
+
+网关预留 8080。每个服务只能连自己的库，账号权限由数据库强制。
 
 跨模块写回：M3 维修中 → M1 下架该室座位；M2 审批通过 → M1 占用该室时段座位。
 M1 的座位状态必须记录写入来源（M1 / M2 / M3）。
@@ -44,18 +46,17 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 
 ## 常用命令
 - 构建并测试全部服务：`mvn verify`（仓库根目录；需要 Docker，测试用 Testcontainers 启动真实 MySQL）
-- 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，seat 8081）
+- 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，服务端口见上表）
   - 只要数据库、服务在本机用 mvn 跑：`docker compose up -d mysql`
-  - 构建上下文是仓库根目录；新增服务时同步更新 `.dockerignore` 和 `deploy/compose.yaml`
+  - 所有服务共用 `deploy/service.Dockerfile`，构建参数 `SERVICE` 指定服务目录名
   - `docker compose down -v` 会删除数据卷、清空所有数据；修改 `deploy/mysql/init/` 后必须这样重建才生效
 - 本地启动单个服务：设置 `DB_PASSWORD`（与 `deploy/.env` 一致）后 `mvn -pl services/seat-service spring-boot:run`，
   健康检查 `curl localhost:8081/actuator/health`
 - 迁移脚本放 `services/<服务>/src/main/resources/db/migration/V<整数>__<小写下划线描述>.sql`；每个服务只连自己的库（`seat_db` 等）
   - 本地自检：`bash scripts/ci/check-migrations.sh`（CI 的 migration-guard 跑的就是它）
 - 集成测试类统一加 `@IntegrationTest`，不要自己组合 `@SpringBootTest` 等注解，否则会多启动一个 MySQL 容器
+- 版本号只在根 `pom.xml` 维护；子模块依赖不写版本（由 Spring Boot 父 POM 管理）
 
 ## CI
 - PR 必须通过 `build`（`mvn -B verify`）和 `migration-guard`，且分支与 main 同步，才能合并。
 - 新增 GitHub Action：官方 action（`actions/*`）用主版本标签；**第三方 action 必须锁定 commit SHA**。
-- 端口约定：gateway 8080、seat 8081、room 8082、repair 8083、platform 8084
-- 版本号只在根 `pom.xml` 维护；子模块依赖不写版本（由 Spring Boot 父 POM 管理）

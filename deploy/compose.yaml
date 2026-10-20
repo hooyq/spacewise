@@ -4,6 +4,22 @@
 #   注意：docker compose down -v 会连数据卷一起删除，所有数据丢失
 name: spacewise
 
+# 四个后端服务的公共配置（x- 开头的键 Compose 不当作服务，只用来被 <<: *backend 引用）
+# 注意 <<: 是浅合并：服务里写了同名的键（如 build、environment）会整个覆盖，不会逐项合并，
+# 所以 build 和 environment 写在每个服务里。
+x-backend: &backend
+  depends_on:
+    # 等 mysql 的 healthcheck 通过后才启动，避免启动时连不上数据库
+    mysql:
+      condition: service_healthy
+  healthcheck:
+    # $$ 表示由容器内的 shell 展开变量，而不是由 Compose 展开
+    test: ["CMD-SHELL", "curl -fsS http://localhost:$$SERVER_PORT/actuator/health"]
+    interval: 10s
+    timeout: 3s
+    retries: 5
+    start_period: 40s
+
 services:
   mysql:
     image: mysql:8.4
@@ -30,11 +46,14 @@ services:
       retries: 20
       start_period: 30s
 
-  seat-service:
+  seat-service:  # M1 自习座位预约
+    <<: *backend
     build:
-      # 构建上下文是仓库根目录（相对本文件的 ..），Dockerfile 在服务目录下
+      # 构建上下文是仓库根目录（相对本文件的 ..）；所有服务共用一份 Dockerfile，靠 SERVICE 参数区分
       context: ..
-      dockerfile: services/seat-service/Dockerfile
+      dockerfile: deploy/service.Dockerfile
+      args:
+        SERVICE: seat-service
     image: spacewise/seat-service:local
     environment:
       # 在 Compose 网络内用服务名 mysql 访问数据库，端口是容器端口 3306（不是宿主机的 3307）
@@ -42,18 +61,66 @@ services:
       DB_PORT: 3306
       DB_USERNAME: seat
       DB_PASSWORD: ${SEAT_DB_PASSWORD:?}
+      SERVER_PORT: 8081
     ports:
       - "8081:8081"
-    depends_on:
-      # 等 mysql 的 healthcheck 通过后才启动，避免启动时连不上数据库
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 40s
+
+  room-service:  # M2 整教室预约与审批
+    <<: *backend
+    build:
+      # 构建上下文是仓库根目录（相对本文件的 ..）；所有服务共用一份 Dockerfile，靠 SERVICE 参数区分
+      context: ..
+      dockerfile: deploy/service.Dockerfile
+      args:
+        SERVICE: room-service
+    image: spacewise/room-service:local
+    environment:
+      # 在 Compose 网络内用服务名 mysql 访问数据库，端口是容器端口 3306（不是宿主机的 3307）
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: room
+      DB_PASSWORD: ${ROOM_DB_PASSWORD:?}
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+
+  repair-service:  # M3 物业报修工单
+    <<: *backend
+    build:
+      # 构建上下文是仓库根目录（相对本文件的 ..）；所有服务共用一份 Dockerfile，靠 SERVICE 参数区分
+      context: ..
+      dockerfile: deploy/service.Dockerfile
+      args:
+        SERVICE: repair-service
+    image: spacewise/repair-service:local
+    environment:
+      # 在 Compose 网络内用服务名 mysql 访问数据库，端口是容器端口 3306（不是宿主机的 3307）
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: repair
+      DB_PASSWORD: ${REPAIR_DB_PASSWORD:?}
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+
+  platform-service:  # D 公共层
+    <<: *backend
+    build:
+      # 构建上下文是仓库根目录（相对本文件的 ..）；所有服务共用一份 Dockerfile，靠 SERVICE 参数区分
+      context: ..
+      dockerfile: deploy/service.Dockerfile
+      args:
+        SERVICE: platform-service
+    image: spacewise/platform-service:local
+    environment:
+      # 在 Compose 网络内用服务名 mysql 访问数据库，端口是容器端口 3306（不是宿主机的 3307）
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: platform
+      DB_PASSWORD: ${PLATFORM_DB_PASSWORD:?}
+      SERVER_PORT: 8084
+    ports:
+      - "8084:8084"
 
 volumes:
   mysql-data:
