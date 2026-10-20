@@ -35,9 +35,16 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 `api`（Controller、`api/dto`）→ `service` → `dao`（MyBatis-Plus Mapper、`*Entity`）/ `client`（调其他服务）；`config` 放配置。
 - api 只调用 service；**不返回实体类**，一律转换成 dto。
 - 要用其他服务的数据，只能通过 `client`（`@HttpExchange` 接口）调用对方的 api，调用方自己声明用到的接口，不引用对方代码。
-  客户端用 `config/HttpClients` 创建，地址和超时配置在 `spacewise.services.<名称>`；框架不自动重试。示例：repair-service 的 `SeatClient`。
+  客户端用 `config/HttpClients` 创建（传入 Spring 注入的 `RestClient.Builder`，否则 traceId 传不到下游），
+  地址和超时配置在 `spacewise.services.<名称>`；框架不自动重试。示例：repair-service 的 `SeatClient`。
 - 路径：对外 `/api/<模块>/...`（**不带这个前缀，网关转发不到**），服务间内部 `/internal/...`。
 - 下游服务不可用不能让本服务的 `/actuator/health` 变 DOWN（避免故障沿调用链扩散）。
+
+## 日志
+- 用 SLF4J（`LoggerFactory.getLogger`），不用 `System.out` / `printStackTrace`。每行日志自动带 `[traceId-spanId]`。
+- 排查一次请求：取网关响应头 `X-Trace-Id`，执行 `cd deploy && docker compose logs | grep <traceId>`。
+- **不得记录密码、token、学号、手机号等个人信息**；记 ID，不记内容。
+- 要在测试里验证 trace 传递，测试类加 `@AutoConfigureObservability`（Spring Boot 测试默认关闭追踪）。
 
 ## 工作流程
 需求 `docs/requirements/` → 设计 `docs/specs/` → 计划 `docs/plans/YYYY-MM-DD-name.md` → 实现 → PR。
