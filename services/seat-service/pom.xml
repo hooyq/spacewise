@@ -24,6 +24,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- 生成并在服务间传递 traceId，写进每行日志；不上报追踪服务器（第 8 步计划） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
         <!-- dao 层用 MyBatis-Plus（ADR-0004），它会带上数据源；版本在根 pom 管理 -->
         <dependency>
             <groupId>com.baomidou</groupId>
