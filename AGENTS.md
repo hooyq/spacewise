@@ -54,7 +54,8 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 发布：在 `main` 上打 tag `vX.Y.Z` → 人工审批 → 部署生产。
 
 ## 常用命令
-- 构建并测试全部服务：`mvn verify`（仓库根目录；需要 Docker，测试用 Testcontainers 启动真实 MySQL）
+- 本地**只测改动的模块**：`mvn verify -pl services/<服务>`（需要 Docker，测试用 Testcontainers 启动真实 MySQL）。
+  全量 `mvn verify` 本机要 4～5 分钟，交给 CI 跑，不要每次改动都本地跑全量
 - 本地全栈：`cd deploy && cp compose.example.env .env && docker compose up -d --build`（MySQL 映射到宿主机 3307，服务端口见上表）
   - 只要数据库、服务在本机用 mvn 跑：`docker compose up -d mysql`
   - 所有服务共用 `deploy/service.Dockerfile`，构建参数 `SERVICE` 指定服务目录名
