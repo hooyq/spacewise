@@ -30,5 +30,30 @@ services:
       retries: 20
       start_period: 30s
 
+  seat-service:
+    build:
+      # 构建上下文是仓库根目录（相对本文件的 ..），Dockerfile 在服务目录下
+      context: ..
+      dockerfile: services/seat-service/Dockerfile
+    image: spacewise/seat-service:local
+    environment:
+      # 在 Compose 网络内用服务名 mysql 访问数据库，端口是容器端口 3306（不是宿主机的 3307）
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USERNAME: seat
+      DB_PASSWORD: ${SEAT_DB_PASSWORD:?}
+    ports:
+      - "8081:8081"
+    depends_on:
+      # 等 mysql 的 healthcheck 通过后才启动，避免启动时连不上数据库
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+
 volumes:
   mysql-data:
