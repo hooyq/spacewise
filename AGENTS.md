@@ -40,6 +40,14 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 路径：对外 `/api/<模块>/...`（**不带这个前缀，网关转发不到**），服务间内部 `/internal/...`。
 - 下游服务不可用不能让本服务的 `/actuator/health` 变 DOWN（避免故障沿调用链扩散）。
 
+## 错误响应（ADR-0006，由 `libs/web-common` 自动生效）
+- 成功：直接返回数据（dto），**不要包 `Result`**。失败：统一为 ProblemDetail + `code` + `traceId`，用 HTTP 状态码表示成败。
+- 业务错误：`throw new BusinessException(XxxErrorCode.YYY, "给调用方看的说明")`；每个服务一个错误码枚举，`code` 带模块前缀（`SEAT.ROOM_NOT_FOUND`）。
+  说明里不要放内部信息或个人信息；错误码发布后不改名。
+- 参数校验用 `@Valid` / `@Pattern` 等注解，失败自动返回 400 `COMMON.VALIDATION_FAILED` 和字段列表。
+- 不要在 Controller 里 try-catch 后自己拼错误 JSON；也不要把异常信息返回给调用方（500 只返回固定文案）。
+- `libs/web-common` 是公共代码，改动须组内评审。
+
 ## 日志
 - 用 SLF4J（`LoggerFactory.getLogger`），不用 `System.out` / `printStackTrace`。每行日志自动带 `[traceId-spanId]`。
 - 排查一次请求：取网关响应头 `X-Trace-Id`，执行 `cd deploy && docker compose logs | grep <traceId>`。
