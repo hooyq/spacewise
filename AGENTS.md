@@ -30,6 +30,14 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 5. **不引入新的基础设施组件**（注册中心、MQ、缓存等），除非已有对应 ADR。
 6. **测试必须验证行为**：禁止断言常量、禁止 mock 被测逻辑本身、禁止为了通过而改测试。修 bug 先写一个会失败的测试。
 
+## 代码分层（每个服务相同，详见各包的 `package-info.java`）
+`api`（Controller、`api/dto`）→ `service` → `dao`（MyBatis-Plus Mapper、`*Entity`）/ `client`（调其他服务）；`config` 放配置。
+- api 只调用 service；**不返回实体类**，一律转换成 dto。
+- 要用其他服务的数据，只能通过 `client`（`@HttpExchange` 接口）调用对方的 api，调用方自己声明用到的接口，不引用对方代码。
+  客户端用 `config/HttpClients` 创建，地址和超时配置在 `spacewise.services.<名称>`；框架不自动重试。示例：repair-service 的 `SeatClient`。
+- 路径：对外 `/api/<模块>/...`，服务间内部 `/internal/...`。
+- 下游服务不可用不能让本服务的 `/actuator/health` 变 DOWN（避免故障沿调用链扩散）。
+
 ## 工作流程
 需求 `docs/requirements/` → 设计 `docs/specs/` → 计划 `docs/plans/YYYY-MM-DD-name.md` → 实现 → PR。
 - 非琐碎任务：先出计划，人确认后再写代码。计划要具体到“没看过对话的人也能照着实现”。
