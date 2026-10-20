@@ -1,0 +1,34 @@
+# 本地开发环境。用法（在 deploy/ 目录下）：
+#   首次：复制 compose.example.env 为 .env 并修改密码
+#   启动：docker compose up -d      停止：docker compose down
+#   注意：docker compose down -v 会连数据卷一起删除，所有数据丢失
+name: spacewise
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 deploy/.env 中设置 MYSQL_ROOT_PASSWORD}
+      # 以下变量只给 init 脚本使用，见 mysql/init/01-databases.sh
+      SEAT_DB_PASSWORD: ${SEAT_DB_PASSWORD:?}
+      ROOM_DB_PASSWORD: ${ROOM_DB_PASSWORD:?}
+      REPAIR_DB_PASSWORD: ${REPAIR_DB_PASSWORD:?}
+      PLATFORM_DB_PASSWORD: ${PLATFORM_DB_PASSWORD:?}
+    ports:
+      # 宿主机端口:容器端口。默认用 3307，避免和本机已安装的 MySQL(3306) 冲突
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      # 数据写进命名卷而不是容器的可写层，删除容器后数据仍在
+      - mysql-data:/var/lib/mysql
+      # 卷为空（首次启动）时，MySQL 会执行这个目录下的脚本；卷里已有数据时不再执行
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # 用 -h 127.0.0.1 走 TCP：初始化阶段的临时实例不监听网络，不会被误判为就绪
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  mysql-data:
