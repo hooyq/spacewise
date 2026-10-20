@@ -11,6 +11,7 @@
 
 # 公共层、schema、流水线、项目规则：任务书要求“须经组内评审”
 **/db/migration/               @hooyq
+/libs/                          @hooyq
 /.github/                       @hooyq
 /deploy/                        @hooyq
 /AGENTS.md                      @hooyq
