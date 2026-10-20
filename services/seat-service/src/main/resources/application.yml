@@ -17,4 +17,4 @@ management:
     web:
       exposure:
         # 只对外暴露健康检查，其余 Actuator 端点（env、beans 等）可能泄露配置
-        include: health
+        include: info
