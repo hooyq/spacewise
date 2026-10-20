@@ -21,7 +21,8 @@ x-healthcheck: &healthcheck
   interval: 10s
   timeout: 3s
   retries: 5
-  start_period: 40s
+  # 本机 6 个容器同时冷启动时，Java 服务实测最慢 132 秒才就绪；宽限期内的失败不计数，就绪后立即变为 healthy
+  start_period: 120s
 
 x-backend: &backend
   depends_on:
