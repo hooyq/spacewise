@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: seat-service
+
+server:
+  # 端口约定：gateway 8080、seat 8081、room 8082、repair 8083、platform 8084
+  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # 只对外暴露健康检查，其余 Actuator 端点（env、beans 等）可能泄露配置
+        include: health
