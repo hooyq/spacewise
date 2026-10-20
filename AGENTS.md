@@ -43,4 +43,7 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 - 发布：在 `main` 上打 tag `vX.Y.Z` → 人工审批 → 部署生产。
 
 ## 常用命令
-（随骨架搭建补充）
+- 构建并测试全部服务：`mvn verify`（仓库根目录）
+- 本地启动单个服务：`mvn -pl services/seat-service spring-boot:run`，健康检查 `curl localhost:8081/actuator/health`
+- 端口约定：gateway 8080、seat 8081、room 8082、repair 8083、platform 8084
+- 版本号只在根 `pom.xml` 维护；子模块依赖不写版本（由 Spring Boot 父 POM 管理）
