@@ -3,7 +3,7 @@
 格式与状态见 `README.md`。设计见 `docs/specs/d-platform.md`。
 
 ### REQ-D-001 维护空间主数据
-- 状态：草稿
+- 状态：已完成
 - 来源：AGENTS.md（公共层负责空间主数据）；ADR-0007
 - 描述：管理员可以新建楼栋、教室、座位（座位可一次批量新建），并修改名称、容量和启用/停用状态。编号创建后不可修改。
 - 验收标准：
@@ -11,11 +11,11 @@
   2. 在不存在的楼栋下新建教室被拒绝，提示楼栋不存在；容量不是正整数被拒绝；
   3. 一次新建多个座位成功；其中有重复编号时整批失败，一个座位都不新建；
   4. 只修改教室名称时，容量保持不变；修改不存在的教室被拒绝。
-- 实现：
-- 验证：
+- 实现：PR #15（https://github.com/hooyq/spacewise/pull/15）；`SpaceController`、`SpaceAdminService`
+- 验证：`SpaceAdminApiTest`：1 `createsActiveBuildingAndRejectsDuplicateCode`；2 `roomInMissingBuildingIsNotFound`、`nonPositiveCapacityFailsValidation`；3 `createsSeatsInBatch`、`duplicateSeatCodeInBatchCreatesNoSeat`；4 `patchChangesOnlyGivenFields`、`patchMissingRoomIsNotFound`
 
 ### REQ-D-002 其他模块查询空间
-- 状态：草稿
+- 状态：已完成
 - 来源：ADR-0007；M1/M2/M3 校验与展示需要
 - 描述：其他服务可以按 ID 查询单个或一批教室、座位，以及某间教室的全部座位；结果直接告诉调用方该空间当前能否使用。
 - 验收标准：
@@ -23,15 +23,15 @@
   2. 批量查询 1 和一个不存在的 ID，只返回 1，不报错；一次超过 100 个 ID 被拒绝；
   3. 查询某教室的座位，按编号排序返回；
   4. 这些接口不能从浏览器经网关访问。
-- 实现：
-- 验证：
+- 实现：PR #15（https://github.com/hooyq/spacewise/pull/15）；`InternalSpaceController`、`SpaceQueryService`
+- 验证：`InternalSpaceApiTest`：1 `roomIncludesBuildingCodeAndName`、`missingRoomIsNotFound`；2 `batchReturnsOnlyExistingRoomsInIdOrder`、`batchOverLimitIsRejected`；3 `roomSeatsAreOrderedByCode`；4 gateway `RoutingTest.internalPathsAreNotReachable`，并在 Compose 下手动验收（见计划 2026-10-21-platform-spaces 偏差记录）
 
 ### REQ-D-003 停用而不删除
-- 状态：草稿
+- 状态：已完成
 - 来源：ADR-0007（其他服务保存了 ID，删除会导致引用失效）
 - 描述：空间不做物理删除，只能停用；停用后仍可按 ID 查到。上级停用时，下级显示为不可用。
 - 验收标准：
   1. 停用某楼栋后，其下座位按 ID 仍能查到，状态仍为启用，但“可用”为否；
   2. 重新启用该楼栋后，座位恢复为可用。
-- 实现：
-- 验证：
+- 实现：PR #15（https://github.com/hooyq/spacewise/pull/15）；迁移 V1～V3（外键 `ON DELETE RESTRICT`）、`RoomView` / `SeatView` 的 `available()`
+- 验证：`InternalSpaceApiTest.disabledBuildingMakesSeatUnavailableUntilReenabled`（1、2）
