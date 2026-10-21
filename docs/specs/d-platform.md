@@ -84,7 +84,7 @@ ACTIVE（启用） ⇄ DISABLED（停用）
 | 方法与路径 | 说明 |
 |---|---|
 | `GET /internal/spaces/rooms/{id}` | 单个教室（含所属楼栋 `buildingId`、`buildingName`）；不存在 → 404 `PLATFORM.ROOM_NOT_FOUND` |
-| `GET /internal/spaces/rooms?ids=1,2,3` | 批量查教室；**只返回存在的**，不存在的 ID 不报错（调用方自行比对）；一次最多 100 个 |
+| `GET /internal/spaces/rooms?ids=1,2,3` | 批量查教室；**只返回存在的**，不存在的 ID 不报错（调用方自行比对）；一次最多 100 个；结果按 ID 升序，重复 ID 只返回一次 |
 | `GET /internal/spaces/seats/{id}` | 单个座位（含 `roomId`）；不存在 → 404 `PLATFORM.SEAT_NOT_FOUND` |
 | `GET /internal/spaces/seats?ids=...` | 批量查座位，规则同教室 |
 | `GET /internal/spaces/rooms/{id}/seats` | 某教室的全部座位（M3 维修中 → M1 下架“该室座位”要用） |
@@ -100,6 +100,12 @@ ACTIVE（启用） ⇄ DISABLED（停用）
 | `POST /api/platform/spaces/rooms` | 管理员 | 新建教室 |
 | `POST /api/platform/spaces/rooms/{id}/seats` | 管理员 | 批量新建座位（一次传多个编号） |
 | `PATCH /api/platform/spaces/{buildings｜rooms｜seats}/{id}` | 管理员 | 修改名称、容量、`status`（停用 / 启用） |
+
+补充约定：
+
+- 新建成功返回 201 和新对象；批量新建座位一次最多 200 个，任何一个编号重复则整批失败，一个都不新建。
+- PATCH 中没有传（或为 `null`）的字段保持不变；编号、所属楼栋 / 教室创建后不可修改。
+- 列表按编号升序（字符串排序，`A-12` 排在 `A-2` 前）。
 
 “登录用户 / 管理员”的校验方式取决于 ADR-0008；在它落地前，这些接口先不做权限校验。
 
