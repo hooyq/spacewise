@@ -89,4 +89,5 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 
 ## CI
 - PR（目标 `dev` 或 `main`）必须通过 `build`（`mvn -B verify`）和 `migration-guard`，且与目标分支同步，才能合并。
+  只改 `docs/` 或 `*.md` 的 PR，`build` 跳过编译和测试直接通过（`scripts/ci/docs-only.sh`）。
 - 新增 GitHub Action：官方 action（`actions/*`）用主版本标签；**第三方 action 必须锁定 commit SHA**。
