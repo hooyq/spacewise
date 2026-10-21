@@ -24,8 +24,19 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          # 需要完整历史，才能和目标分支比较出改了哪些文件
+          fetch-depth: 0
+
+      # 只改 docs/ 或 *.md 的 PR 跳过编译和测试；job 仍然运行并报成功，
+      # 否则必须通过的 build 检查不会上报，PR 无法合并。推送到 dev / main 始终完整构建。
+      - name: Detect docs-only change
+        id: scope
+        if: github.event_name == 'pull_request'
+        run: bash scripts/ci/docs-only.sh origin/${{ github.base_ref }} >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@v6
+        if: steps.scope.outputs.docs_only != 'true'
         with:
           distribution: temurin
           java-version: '21'
@@ -33,6 +44,7 @@ jobs:
 
       # runner 自带 Docker，Testcontainers 会在这里启动真实 MySQL
       - name: Build and test
+        if: steps.scope.outputs.docs_only != 'true'
         run: mvn -B verify
 
       - name: Upload test reports
