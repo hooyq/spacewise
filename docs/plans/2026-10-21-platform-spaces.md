@@ -2,7 +2,7 @@
 
 - 日期：2026-10-21
 - 关联：ADR-0007；`docs/specs/d-platform.md` 第 1 节；需求 REQ-D-001 ～ REQ-D-003（本次新增）
-- 状态：待确认
+- 状态：已实现，待 PR 评审
 
 ## 目标
 
@@ -127,4 +127,15 @@ API 测试在 `@AfterEach` 里按 `seat → room → building` 顺序清空三�
 
 ## 实现偏差记录
 
-（实现后填写）
+- `SpaceStatus` 放在 **dao** 包而不是 service 包：实体要用它，放 service 会让 dao 反过来依赖 service（循环依赖）；
+  api 的 `package-info` 本来就允许引用 service 返回的实体类型，请求 DTO 引用它不违反分层。
+- `available` 没有放在一个静态方法里，而是由 `RoomView.available()`、`SeatView.available()` 各自计算（座位复用教室的结果），
+  楼栋的在 `BuildingResponse` 里；规则仍只写一遍。
+- `SpaceQueryService` 多了 `getBuilding(id)`，供新建教室时校验楼栋。
+- 状态列默认值 `'ACTIVE'` 写在表上，新增了 `SpaceSchemaTest.newSpaceIsActiveByDefault`。
+- 验收结果：
+  1. `mvn verify -pl services/platform-service -am`：24 个测试通过；`check-migrations.sh origin/dev` 通过。
+     故意去掉 `createSeats` 的 `@Transactional`，`duplicateSeatCodeInBatchCreatesNoSeat` 失败（`expected: 0`），恢复后通过。
+  2. Compose 全栈经网关：新建楼栋 / 教室 / 座位、列出座位、PATCH 名称均正常；重复编号返回 409 + `PLATFORM.SPACE_CODE_DUPLICATED` + `traceId`；
+     `localhost:8080/internal/spaces/rooms/1` 返回 404；`localhost:8084/internal/spaces/rooms?ids=1,999999` 只返回 1。
+  - 注意：Windows 下 curl 命令行里直接写中文会被转成 `?`，要用 `--data-binary @文件`（UTF-8）发送。
