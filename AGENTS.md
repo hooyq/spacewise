@@ -58,6 +58,9 @@ Java 21 · Spring Boot · Maven · Flyway · Docker Compose · GitHub Actions。
 需求 `docs/requirements/` → 设计 `docs/specs/` → 计划 `docs/plans/YYYY-MM-DD-name.md` → 实现 → PR。
 - 非琐碎任务：先出计划，人确认后再写代码。计划要具体到“没看过对话的人也能照着实现”。
 - 重要取舍写 ADR（`docs/adr/NNNN-name.md`，模板见 `0000-template.md`），列出候选方案而不是只写结论。
+- 需求、设计按模块一个文件，新功能在原文件里追加或修改；计划、ADR 每次新建。
+- **回填（在同一个 PR 里做，不等合并后）**：需求状态改为“已完成”，填“实现”（PR 链接）和“验证”（测试类.方法 / 手动验收）；
+  spec 改成实际实现的样子；计划末尾写偏差记录。开工时把需求状态改为“开发中”。
 - 一次改动只做一件事，保持 diff 可审查；不顺手重构无关代码。
 
 ## Git 约定
